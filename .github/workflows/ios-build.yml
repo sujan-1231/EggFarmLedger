@@ -31,6 +31,21 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Run in iOS Simulator and take screenshot
+        run: |
+          APP_ID=$(node -e "const fs = require('fs'); const cfg = fs.readFileSync('capacitor.config.ts', 'utf8'); const m = cfg.match(/appId:\s*['\"]([^'\"]+)['\"]/); console.log(m ? m[1] : 'io.ionic.starter');")
+          xcrun simctl boot "iPhone 16" || true
+          xcrun simctl install booted ios/App/build/Build/Products/Release-iphonesimulator/App.app
+          xcrun simctl launch booted "$APP_ID"
+          sleep 5
+          xcrun simctl io booted screenshot simulator-screen.png
+
+      - name: Upload Screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: iOS-Simulator-Preview
+          path: simulator-screen.png
+
       - name: Upload App.app artifact
         uses: actions/upload-artifact@v4
         with:
