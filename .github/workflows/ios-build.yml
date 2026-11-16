@@ -34,11 +34,13 @@ jobs:
       - name: Run in iOS Simulator and take screenshot
         run: |
           APP_ID=$(node -e "const fs = require('fs'); const cfg = fs.readFileSync('capacitor.config.ts', 'utf8'); const m = cfg.match(/appId:\s*['\"]([^'\"]+)['\"]/); console.log(m ? m[1] : 'io.ionic.starter');")
-          xcrun simctl boot "iPhone 16" || true
-          xcrun simctl install booted ios/App/build/Build/Products/Release-iphonesimulator/App.app
-          xcrun simctl launch booted "$APP_ID"
+          DEVICE_ID=$(xcrun simctl list devices available | grep -m 1 "iPhone" | grep -oE '[0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12}')
+          xcrun simctl boot "$DEVICE_ID"
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl install "$DEVICE_ID" ios/App/build/Build/Products/Release-iphonesimulator/App.app
+          xcrun simctl launch "$DEVICE_ID" "$APP_ID"
           sleep 5
-          xcrun simctl io booted screenshot simulator-screen.png
+          xcrun simctl io "$DEVICE_ID" screenshot simulator-screen.png
 
       - name: Upload Screenshot
         uses: actions/upload-artifact@v4
